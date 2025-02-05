@@ -1,6 +1,7 @@
 package com.example.aplikacjeprzemyslowe.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,21 +13,25 @@ public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Getter
     private Long id;
 
     @Getter
     @Setter
+    @NotBlank(message = "Comment cannot be empty.")
+    @Size(max = 1000, message = "Comment cannot exceed 1000 characters.")
     private String text;
 
     @ManyToOne
     @JoinColumn(name = "author_id")
+    @Getter
+    @Setter
     private User author;
 
     @Getter
     @Setter
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // link back to Book
     @ManyToOne
     @JoinColumn(name = "book_id")
     @Getter
@@ -40,5 +45,4 @@ public class Comment {
         this.book = book;
     }
 
-    // getters, setters, etc.
 }
