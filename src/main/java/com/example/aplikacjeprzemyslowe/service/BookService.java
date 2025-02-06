@@ -2,12 +2,14 @@ package com.example.aplikacjeprzemyslowe.service;
 
 import com.example.aplikacjeprzemyslowe.entity.Book;
 import com.example.aplikacjeprzemyslowe.entity.BookRating;
+import com.example.aplikacjeprzemyslowe.entity.CustomUserDetails;
 import com.example.aplikacjeprzemyslowe.entity.User;
 import com.example.aplikacjeprzemyslowe.repository.BookRatingRepository;
 import com.example.aplikacjeprzemyslowe.repository.BookRepository;
 import com.example.aplikacjeprzemyslowe.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -93,6 +95,7 @@ public class BookService {
     public Optional<Book> getBookById(Long bookId) {
         return bookRepository.findById(bookId);
     }
+    @Transactional
     public Optional<Book> getBookDetails(Long bookId) {
         return bookRepository.findBookWithDetails(bookId);
     }
@@ -123,24 +126,29 @@ public class BookService {
         }
         bookRepository.deleteById(bookId);
     }
-    public Optional<Book> borrowBook(Long bookId, User user) {
+    public Optional<Book> borrowBook(Long bookId, CustomUserDetails user) {
+        User persistentUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found")); // ✅ Fetch the user from DB
+
         return bookRepository.findById(bookId).map(book -> {
             if (book.isBorrowed()) {
                 throw new RuntimeException("Book is already borrowed.");
             }
             book.setBorrowed(true);
             book.setBorrowedUntil(LocalDate.now().plusWeeks(2));
-            book.setBorrowedBy(user);
-            return bookRepository.save(book);
-        });
+            book.setBorrowedBy(persistentUser); // ✅ Use the fetched user
+            return Optional.of(bookRepository.save(book));
+        }).orElseThrow(() -> new RuntimeException("Book not found"));
     }
 
-    public Optional<Book> returnBook(Long bookId, User user) {
+    public Optional<Book> returnBook(Long bookId, CustomUserDetails user) {
+        User persistentUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found")); // ✅ Fetch the user from DB
         return bookRepository.findById(bookId).map(book -> {
             if (!book.isBorrowed()) {
                 throw new RuntimeException("Book is not currently borrowed.");
             }
-            if (!book.getBorrowedBy().equals(user)) {
+            if (!book.getBorrowedBy().equals(persistentUser)) {
                 throw new RuntimeException("Not authorized to return this book.");
             }
             book.setBorrowed(false);

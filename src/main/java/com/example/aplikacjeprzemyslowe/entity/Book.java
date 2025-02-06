@@ -1,5 +1,7 @@
 package com.example.aplikacjeprzemyslowe.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -7,7 +9,9 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "books")
@@ -57,7 +61,13 @@ public class Book {
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     @Getter
     @Setter
-    private List<BookRating> ratings = new ArrayList<>();
+    private Set<BookRating> ratings = new HashSet<>();
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Getter
+    @Setter
+    private Set<Comment> comments = new HashSet<>();
+
 
     public void addRating(BookRating rating) {
         ratings.add(rating);
@@ -68,11 +78,6 @@ public class Book {
         ratings.remove(rating);
         rating.setBook(null);
     }
-
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Getter
-    @Setter
-    private List<Comment> comments = new ArrayList<>();
 
     @Getter
     @Setter

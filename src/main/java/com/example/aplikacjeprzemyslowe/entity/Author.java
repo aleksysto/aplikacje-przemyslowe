@@ -1,4 +1,6 @@
 package com.example.aplikacjeprzemyslowe.entity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -25,6 +27,7 @@ public class Author {
     // If you want a back-reference from Author -> Books:
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     @Getter
+    @JsonIgnore
     private List<Book> books = new ArrayList<>();
 
     // Constructors

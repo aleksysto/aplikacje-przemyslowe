@@ -2,6 +2,7 @@ package com.example.aplikacjeprzemyslowe.controller;
 
 import com.example.aplikacjeprzemyslowe.entity.User;
 import com.example.aplikacjeprzemyslowe.payload.LoginRequest;
+import com.example.aplikacjeprzemyslowe.payload.RegisterRequest;
 import com.example.aplikacjeprzemyslowe.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -14,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,18 +27,25 @@ public class AuthController {
 
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AuthController(UserService userService, AuthenticationManager authenticationManager) {
+    public AuthController(UserService userService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Validated @RequestBody User userRequest) {
+    public ResponseEntity<?> registerUser(@Validated @RequestBody RegisterRequest userRequest) {
         try {
             // Create new user
-            User savedUser = userService.registerNewUser(userRequest);
+            User newUser = new User();
+            newUser.setUsername(userRequest.getUsername());
+            newUser.setPassword(passwordEncoder.encode(userRequest.getPassword())); // ✅ Encode password
+            newUser.setEmail(userRequest.getEmail());
+            newUser.setFullName(userRequest.getFullName());
+            User savedUser = userService.registerNewUser(newUser);
             return ResponseEntity.ok(savedUser);
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());

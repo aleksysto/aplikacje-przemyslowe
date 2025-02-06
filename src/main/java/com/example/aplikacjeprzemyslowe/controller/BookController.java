@@ -2,6 +2,7 @@ package com.example.aplikacjeprzemyslowe.controller;
 
 import com.example.aplikacjeprzemyslowe.entity.Book;
 import com.example.aplikacjeprzemyslowe.entity.BookRating;
+import com.example.aplikacjeprzemyslowe.entity.CustomUserDetails;
 import com.example.aplikacjeprzemyslowe.entity.User;
 import com.example.aplikacjeprzemyslowe.service.BookService;
 import org.springframework.http.HttpStatus;
@@ -56,11 +57,17 @@ public class BookController {
     }
 
     @GetMapping("/{bookId}/details")
-    public ResponseEntity<Book> getBookDetails(@PathVariable Long bookId) {
-        return bookService.getBookDetails(bookId)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<?> getBookDetails(@PathVariable Long bookId) {
+        Optional<Book> optionalBook = bookService.getBookDetails(bookId);
+
+        if (optionalBook.isPresent()) {
+            Book book = optionalBook.get();
+            return ResponseEntity.ok(book); // Return the book properly
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Book not found");
+        }
     }
+
     @GetMapping("/genres")
     public List<String> getAllGenres() {
         return bookService.getAllGenres();
@@ -89,32 +96,40 @@ public class BookController {
     }
     @PostMapping("/{bookId}/borrow")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Book> borrowBook(@PathVariable Long bookId, @AuthenticationPrincipal User user) {
-        Optional<Book> book = bookService.borrowBook(bookId, user);
+    public ResponseEntity<Book> borrowBook(@PathVariable Long bookId, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        Optional<Book> book = bookService.borrowBook(bookId, customUserDetails);
         return book.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{bookId}/return")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Book> returnBook(@PathVariable Long bookId, @AuthenticationPrincipal User user) {
-        Optional<Book> book = bookService.returnBook(bookId, user);
+    public ResponseEntity<Book> returnBook(@PathVariable Long bookId, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        Optional<Book> book = bookService.returnBook(bookId, customUserDetails);
         return book.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
     @PutMapping("/{bookId}/rate")
-    @PreAuthorize("isAuthenticated()")
+     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BookRating> rateBook(@PathVariable Long bookId,
                                                @RequestParam int rating,
-                                               @AuthenticationPrincipal User user) {
+                                               @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        if (customUserDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        Long userId = customUserDetails.getId();
+
         if (rating < 1 || rating > 5) {
             return ResponseEntity.badRequest().body(null);
         }
-        BookRating bookRating = bookService.rateBook(bookId, user.getId(), rating);
+
+        BookRating bookRating = bookService.rateBook(bookId, userId, rating);
         return ResponseEntity.ok(bookRating);
     }
 
+
     @DeleteMapping("/{bookId}/rate")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> removeRating(@PathVariable Long bookId, @AuthenticationPrincipal User user) {
+    public ResponseEntity<Void> removeRating(@PathVariable Long bookId, @AuthenticationPrincipal CustomUserDetails user) {
         bookService.removeRating(bookId, user.getId());
         return ResponseEntity.noContent().build();
     }

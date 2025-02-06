@@ -34,7 +34,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     @Query("SELECT COUNT(r) FROM BookRating r WHERE r.book.id = :bookId")
     int countRatingsForBook(@Param("bookId") Long bookId);
 
-    @Query("SELECT b FROM Book b LEFT JOIN FETCH b.ratings LEFT JOIN FETCH b.comments WHERE b.id = :bookId")
+    @Query("SELECT b FROM Book b LEFT JOIN FETCH b.comments WHERE b.id = :bookId")
     Optional<Book> findBookWithDetails(@Param("bookId") Long bookId);
 
     @Query("SELECT DISTINCT b.genre FROM Book b ORDER BY b.genre")

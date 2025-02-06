@@ -1,5 +1,6 @@
 package com.example.aplikacjeprzemyslowe.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -36,6 +37,7 @@ public class Comment {
     @JoinColumn(name = "book_id")
     @Getter
     @Setter
+    @JsonIgnore
     private Book book;
 
     public Comment() {}

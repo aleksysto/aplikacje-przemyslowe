@@ -1,5 +1,6 @@
 package com.example.aplikacjeprzemyslowe.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -23,6 +24,7 @@ public class BookRating {
     @JoinColumn(name = "book_id", nullable = false)
     @Getter
     @Setter
+    @JsonIgnore
     private Book book;
 
     // The user who gave the rating
@@ -30,6 +32,7 @@ public class BookRating {
     @JoinColumn(name = "user_id", nullable = false)
     @Getter
     @Setter
+    @JsonIgnore
     private User user;
 
     // The rating itself, let’s say 1..5 or 1..10

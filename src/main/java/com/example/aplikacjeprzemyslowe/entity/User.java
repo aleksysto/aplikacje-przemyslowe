@@ -1,6 +1,7 @@
 package com.example.aplikacjeprzemyslowe.entity;
 
 import com.example.aplikacjeprzemyslowe.enums.UserType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -33,8 +34,9 @@ public class User {
     @Setter
     private UserType userType = UserType.USER; // Default to USER
 
-    @Getter
     @Setter
+    @Getter
+    @JsonIgnore
     private String password;
 
     @Getter
@@ -58,11 +60,13 @@ public class User {
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
     @Setter
     @Getter
+    @JsonIgnore  // Prevent recursion when serializing User entity
     private List<Comment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Getter
     @Setter
+    @JsonIgnore
     private List<BookRating> bookRatings = new ArrayList<>();
 
 
