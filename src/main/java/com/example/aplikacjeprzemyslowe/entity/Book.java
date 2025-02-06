@@ -79,6 +79,8 @@ public class Book {
     private boolean borrowed;
 
     @Column(name = "borrowed_until")
+    @Getter
+    @Setter
     private LocalDate borrowedUntil;
 
     @ManyToOne

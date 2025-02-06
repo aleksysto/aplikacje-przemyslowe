@@ -26,7 +26,7 @@ public class UserService {
             throw new RuntimeException("Username already taken.");
         }
         if (!isValidPassword(user.getPassword())) {
-            throw new IllegalArgumentException("Password doesn't meet the requirements");
+            throw new RuntimeException("Password doesn't meet the requirements");
         }
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("Email already in use.");
@@ -44,5 +44,12 @@ public class UserService {
     private boolean isValidPassword(String rawPassword) {
         String pattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$";
         return rawPassword.matches(pattern);
+    }
+
+    public void deleteUser(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new RuntimeException("User not found");
+        }
+        userRepository.deleteById(userId);
     }
 }

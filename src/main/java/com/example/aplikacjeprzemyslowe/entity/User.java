@@ -5,8 +5,11 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Entity
@@ -45,6 +48,9 @@ public class User {
     @Setter
     @Size(max = 100, message = "Full name cannot exceed 100 characters.")
     private String fullName;
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(userType == UserType.ADMIN ? "ROLE_ADMIN" : "ROLE_USER"));
+    }
 
     @OneToMany(mappedBy = "borrowedBy", cascade = CascadeType.ALL)
     private List<Book> borrowedBooks = new ArrayList<>();

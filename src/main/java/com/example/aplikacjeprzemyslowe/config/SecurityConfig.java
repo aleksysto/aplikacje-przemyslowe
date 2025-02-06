@@ -22,7 +22,10 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                .anyRequest().authenticated() // everything else must be authenticated
+                .requestMatchers("/api/books/admin/**").hasRole("ADMIN") // Admin-only book management
+                .requestMatchers("/api/books/{bookId}/rate").authenticated() // Only logged-in users can rate books
+                .requestMatchers("/api/comments/**").authenticated() // Only authenticated users can comment
+                .anyRequest().authenticated()
         );
 
         http.httpBasic(Customizer.withDefaults());
