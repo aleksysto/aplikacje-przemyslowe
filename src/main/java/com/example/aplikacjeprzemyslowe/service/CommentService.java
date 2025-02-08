@@ -4,6 +4,7 @@ import com.example.aplikacjeprzemyslowe.entity.Book;
 import com.example.aplikacjeprzemyslowe.entity.Comment;
 import com.example.aplikacjeprzemyslowe.entity.CustomUserDetails;
 import com.example.aplikacjeprzemyslowe.entity.User;
+import com.example.aplikacjeprzemyslowe.payload.CommentRequest;
 import com.example.aplikacjeprzemyslowe.repository.BookRepository;
 import com.example.aplikacjeprzemyslowe.repository.CommentRepository;
 import com.example.aplikacjeprzemyslowe.repository.UserRepository;
@@ -29,9 +30,11 @@ public class CommentService {
         return commentRepository.findByBookId(bookId);
     }
 
-    public Comment addComment(Comment comment,Long bookId, CustomUserDetails user) {
+    public Comment addComment(CommentRequest commentRequest, Long bookId, CustomUserDetails user) {
         User persistentUser = userRepository.findById(user.getId())
                 .orElseThrow(() -> new RuntimeException("User not found")); // ✅ Fetch the user from DB
+        Comment comment = new Comment();
+        comment.setText(commentRequest.getText());
         comment.setAuthor(persistentUser);
         Book persistentBook = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("User not found")); // ✅ Fetch the user from DB
@@ -43,11 +46,16 @@ public class CommentService {
         return commentRepository.findById(commentId);
     }
 
-    public Comment updateComment(Comment comment) {
+    public Comment updateComment(Long commentId, String text) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RuntimeException("Comment not found"));
+        comment.setText(text);
         return commentRepository.save(comment);
     }
 
-    public void deleteComment(Comment comment) {
-        commentRepository.delete(comment);
+    public void deleteComment(Long id) {
+        commentRepository.deleteById(id);
+    }
+    public List<Comment> getAllComments() {
+        return commentRepository.findAll();
     }
 }

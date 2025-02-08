@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Search Results</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<section>
+    <h2>Results for "<span th:text="${query}"></span>"</h2>
+    <a href="/">Back to Home</a>
+
+    <p th:if="${searchResults.isEmpty()}">No results found.</p>
+
+    <ul>
+        <li th:each="book : ${searchResults}">
+            <a th:href="@{/books/{id}(id=${book.id})}" th:text="${book.title}"></a>
+            - Genre: <span th:text="${book.genre}"></span>
+            - Author: <span th:text="${book.author.name} ?: 'Unknown'"></span> <!-- ✅ Prevents errors -->
+            - Average Rating: <span th:text="${bookRatings[book.id]} ?: 'N/A'"></span>
+        </li>
+    </ul>
+</section>
+
+</body>
+</html>

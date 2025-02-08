@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Add Book</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<h2>Add a New Book</h2>
+
+<form method="post" th:action="@{/admin/books/add}" th:object="${bookRequest}">
+    <label>Title:</label>
+    <input type="text" name="title" th:field="*{title}">
+    <p th:if="${#fields.hasErrors('title')}" th:text="${#fields.errors('title')[0]}" style="color: red;"></p>
+
+    <label>Author:</label>
+    <select name="authorId" th:field="*{authorId}">
+        <option th:each="author : ${authors}" th:value="${author.id}" th:text="${author.name}"></option>
+    </select>
+    <p th:if="${#fields.hasErrors('authorId')}" th:text="${#fields.errors('authorId')[0]}" style="color: red;"></p>
+
+    <label>Genre:</label>
+    <input type="text" name="genre" th:field="*{genre}">
+    <p th:if="${#fields.hasErrors('genre')}" th:text="${#fields.errors('genre')[0]}" style="color: red;"></p>
+
+    <label>Description:</label>
+    <textarea name="description" th:field="*{description}"></textarea>
+    <p th:if="${#fields.hasErrors('description')}" th:text="${#fields.errors('description')[0]}" style="color: red;"></p>
+
+    <label>Publisher:</label>
+    <input type="text" name="publisher" th:field="*{publisher}">
+    <p th:if="${#fields.hasErrors('publisher')}" th:text="${#fields.errors('publisher')[0]}" style="color: red;"></p>
+
+    <label>Publish Date:</label>
+    <input type="date" name="publishDate" th:field="*{publishDate}">
+    <p th:if="${#fields.hasErrors('publishDate')}" th:text="${#fields.errors('publishDate')[0]}" style="color: red;"></p>
+    <button type="submit">Save Changes</button>
+</form>
+
+<p><a href="/admin">Back to Admin Panel</a></p>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Edit Comment</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<h2>Edit Comment</h2>
+
+<form method="post" th:action="@{/comments/edit/{commentId}(commentId=${comment.id})}" th:object="${commentRequest}">
+    <label>Comment:</label>
+    <textarea name="text" th:field="*{text}" th:text="${comment.text}" required></textarea>
+    <p th:if="${#fields.hasErrors('text')}" th:text="${#fields.errors('text')[0]}" style="color: red;"></p>
+
+    <button type="submit">Save Changes</button>
+</form>
+
+<p><a href="/admin">Back to Admin Panel</a></p>
+</body>
+</html>

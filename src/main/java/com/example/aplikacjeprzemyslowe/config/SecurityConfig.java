@@ -21,23 +21,27 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable());
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/search/**").permitAll() // ✅ Allow public access to search
+                        .requestMatchers("/", "auth/register", "auth/login", "/css/**").permitAll()  // Allow access to main page, register, login
+                        .requestMatchers("/admin").hasRole("ADMIN")  // Only admin can access admin panel
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/auth/login")
+                        .defaultSuccessUrl("/", true)  // Redirect to main page after login
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/")
+                        .permitAll()
+                )
+                .anonymous(anonymous -> anonymous.disable()); // ❌ Disable automatic anonymous authentication
 
-        http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                .requestMatchers("/api/books/admin/**").hasRole("ADMIN") // Admin-only book management
-                .requestMatchers("/api/books/{bookId}/rate").authenticated() // Only logged-in users can rate books
-                .requestMatchers(HttpMethod.PUT,"/api/comments/**").authenticated()
-                .requestMatchers(HttpMethod.POST,"/api/comments/**").authenticated()
-                .requestMatchers(HttpMethod.DELETE,"/api/comments/**").authenticated()
-                .requestMatchers(HttpMethod.GET,"/api/comments/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/authors/**").permitAll()
-                .anyRequest().authenticated()
-        );
 
-        http.httpBasic(Customizer.withDefaults());
 
         return http.build();
     }

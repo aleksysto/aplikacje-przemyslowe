@@ -1,141 +1,173 @@
 package com.example.aplikacjeprzemyslowe.controller;
 
-import com.example.aplikacjeprzemyslowe.entity.Book;
-import com.example.aplikacjeprzemyslowe.entity.BookRating;
-import com.example.aplikacjeprzemyslowe.entity.CustomUserDetails;
-import com.example.aplikacjeprzemyslowe.entity.User;
+import com.example.aplikacjeprzemyslowe.entity.*;
+import com.example.aplikacjeprzemyslowe.payload.CommentRequest;
+import com.example.aplikacjeprzemyslowe.payload.RatingRequest;
+import com.example.aplikacjeprzemyslowe.service.AuthorService;
 import com.example.aplikacjeprzemyslowe.service.BookService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import com.example.aplikacjeprzemyslowe.service.CommentService;
+import com.example.aplikacjeprzemyslowe.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.bind.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-@RestController
-@RequestMapping("/api/books")
+@Controller
+@RequestMapping("/")
 public class BookController {
 
     private final BookService bookService;
+    private final AuthorService authorService;
+    private final CommentService commentService;
+    private final UserService userService;
 
-    public BookController(BookService bookService) {
+    public BookController(BookService bookService, AuthorService authorService, CommentService commentService, UserService userService) {
         this.bookService = bookService;
+        this.authorService = authorService;
+        this.commentService = commentService;
+        this.userService = userService;
     }
+    @GetMapping
+    public String mainPage(Model model) {
+        // Fetch the top-rated books
+        List<Book> topRatedBooks = bookService.getTop5ByAverageRating(false);
+        model.addAttribute("topRatedBooks", topRatedBooks);
+        Map<Long, Double> bookRatings = new HashMap<>();
+        for (Book book : topRatedBooks) {
+            Double avgRating = bookService.getAverageRating(book.getId());
+            bookRatings.put(book.getId(), avgRating);
+        }
+        Map<Author, Double> topRatedAuthors = authorService.getTopRatedAuthorsWithRatings();
 
-    @GetMapping("/search/author")
-    public List<Book> searchByAuthor(@RequestParam String author, @RequestParam(defaultValue="false") boolean onlyAvailable) {
-        return bookService.searchBooksByAuthor(author, onlyAvailable);
-    }
 
-    @GetMapping("/search/title")
-    public List<Book> searchByTitle(@RequestParam String title, @RequestParam(defaultValue="false") boolean onlyAvailable) {
-        return bookService.searchBooksByTitle(title, onlyAvailable);
-    }
 
-    @GetMapping("/search/genre")
-    public List<Book> searchByGenre(@RequestParam String genre, @RequestParam(defaultValue="false") boolean onlyAvailable) {
-        return bookService.searchBooksByGenre(genre, onlyAvailable);
-    }
+        model.addAttribute("topRatedBooks", topRatedBooks);
+        model.addAttribute("topRatedAuthors", topRatedAuthors);
+        model.addAttribute("bookRatings", bookRatings);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAuthenticated = authentication != null && authentication.isAuthenticated();
+        boolean isAdmin = isAuthenticated && authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
 
-    @GetMapping("/top-rated")
-    public List<Book> getTop5(@RequestParam(defaultValue="false") boolean onlyAvailable) {
-        return bookService.getTop5ByAverageRating(onlyAvailable);
-    }
-    @GetMapping("/{bookId}/ratings/count")
-    public int getBookRatingCount(@PathVariable Long bookId) {
-        return bookService.getNumberOfRatings(bookId);
-    }
-    @GetMapping("/{bookId}")
-    public ResponseEntity<Book> getBook(@PathVariable Long bookId) {
-        return bookService.getBookById(bookId)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
+        model.addAttribute("isAuthenticated", isAuthenticated);
+        model.addAttribute("isAdmin", isAdmin);
 
-    @GetMapping("/{bookId}/details")
-    public ResponseEntity<?> getBookDetails(@PathVariable Long bookId) {
-        Optional<Book> optionalBook = bookService.getBookDetails(bookId);
+        return "home";
+    }
+    @GetMapping("/search")
+    public String searchBooks(@RequestParam("query") String query,
+                              @RequestParam("type") String type,
+                              Model model) {
+        List<Book> searchResults;
 
-        if (optionalBook.isPresent()) {
-            Book book = optionalBook.get();
-            return ResponseEntity.ok(book); // Return the book properly
+        switch (type) {
+            case "title":
+                searchResults = bookService.searchBooksByTitle(query, false);
+                break;
+            case "author":
+                searchResults = bookService.searchBooksByAuthor(query, false);
+                break;
+            case "genre":
+                searchResults = bookService.searchBooksByGenre(query, false);
+                break;
+            default:
+                searchResults = List.of(); // Empty list if type is unknown
+        }
+
+        model.addAttribute("searchResults", searchResults);
+        model.addAttribute("query", query);
+        model.addAttribute("type", type);
+        Map<Long, Double> bookRatings = new HashMap<>();
+        for (Book book : searchResults) {
+            Double avgRating = bookService.getAverageRating(book.getId());
+            bookRatings.put(book.getId(), avgRating);
+        }
+        model.addAttribute("bookRatings", bookRatings);
+
+        return "books/search-results";
+    }
+    @GetMapping("books/{bookId}")
+    public String getBookDetails(@PathVariable Long bookId, Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Book book = bookService.getBookById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+        List<Comment> comments = commentService.getCommentsForBook(bookId);
+
+        model.addAttribute("book", book);
+        model.addAttribute("comments", comments);
+        model.addAttribute("commentRequest", new CommentRequest());
+        model.addAttribute("ratingRequest", new RatingRequest());
+        Optional<BookRating> yourRating = bookService.findRatingByBookAndUser(bookId, userDetails.getId());
+        if (yourRating.isPresent()) {
+            model.addAttribute("yourRating", yourRating.get().getRating());
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Book not found");
+            model.addAttribute("yourRating", null);
         }
+        model.addAttribute("avgRating", bookService.getAverageRating(bookId));
+        return "books/book-details";
     }
+    @PostMapping("books/{bookId}/rate")
+    public String rateBook(@PathVariable Long bookId, @Valid @ModelAttribute("ratingRequest") RatingRequest ratingRequest,
+                           BindingResult bindingResult, @AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        if (bindingResult.hasErrors()) {
+            Book book = bookService.getBookById(bookId)
+                    .orElseThrow(() -> new RuntimeException("Book not found"));
+            List<Comment> comments = commentService.getCommentsForBook(bookId);
 
-    @GetMapping("/genres")
-    public List<String> getAllGenres() {
-        return bookService.getAllGenres();
-    }
-    @PostMapping("/admin")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Book> addBook(@RequestBody Book book) {
-        Book savedBook = bookService.saveBook(book);
-        return new ResponseEntity<>(savedBook, HttpStatus.CREATED);
-    }
-
-    // Update an existing book (Admin only)
-    @PutMapping("/admin/{bookId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Book> updateBook(@PathVariable Long bookId, @RequestBody Book updatedBook) {
-        Book savedBook = bookService.updateBook(bookId, updatedBook);
-        return ResponseEntity.ok(savedBook);
-    }
-
-    // Delete a book (Admin only)
-    @DeleteMapping("/admin/{bookId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteBook(@PathVariable Long bookId) {
-        bookService.deleteBook(bookId);
-        return ResponseEntity.noContent().build();
-    }
-    @PostMapping("/{bookId}/borrow")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Book> borrowBook(@PathVariable Long bookId, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        Optional<Book> book = bookService.borrowBook(bookId, customUserDetails);
-        return book.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @PostMapping("/{bookId}/return")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Book> returnBook(@PathVariable Long bookId, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        Optional<Book> book = bookService.returnBook(bookId, customUserDetails);
-        return book.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
-    @PutMapping("/{bookId}/rate")
-     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<BookRating> rateBook(@PathVariable Long bookId,
-                                               @RequestParam int rating,
-                                               @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        if (customUserDetails == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            model.addAttribute("book", book);
+            model.addAttribute("comments", comments);
+            model.addAttribute("commentRequest", new CommentRequest());
+            model.addAttribute("ratingRequest", new RatingRequest());
+            model.addAttribute("yourRating", bookService.findRatingByBookAndUser(bookId, userDetails.getId()));
+            model.addAttribute("avgRating", bookService.getAverageRating(bookId));
+            return "books/book-details";
         }
+        User user = userService.findById(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        bookService.rateBook(bookId, user.getId(), ratingRequest.getRating());
+        return "redirect:/books/" + bookId + "?success";
+    }
 
-        Long userId = customUserDetails.getId();
+    @PostMapping("books/{bookId}/comment")
+    public String addComment(@PathVariable Long bookId, @Valid @ModelAttribute("commentRequest") CommentRequest commentRequest,
+                             BindingResult bindingResult, @AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
 
-        if (rating < 1 || rating > 5) {
-            return ResponseEntity.badRequest().body(null);
+        if (commentRequest.getText() == null || commentRequest.getText().trim().isEmpty()) {
+            bindingResult.rejectValue("text", "error.commentRequest", "Comment text is required");
         }
+        if (bindingResult.hasErrors()) {
+            Book book = bookService.getBookById(bookId)
+                    .orElseThrow(() -> new RuntimeException("Book not found"));
+            List<Comment> comments = commentService.getCommentsForBook(bookId);
 
-        BookRating bookRating = bookService.rateBook(bookId, userId, rating);
-        return ResponseEntity.ok(bookRating);
+            model.addAttribute("book", book);
+            model.addAttribute("comments", comments);
+            model.addAttribute("commentRequest", commentRequest);
+            model.addAttribute("ratingRequest", new RatingRequest());
+            model.addAttribute("yourRating", bookService.findRatingByBookAndUser(bookId, userDetails.getId()));
+            model.addAttribute("avgRating", bookService.getAverageRating(bookId));
+            return "books/book-details";
+        }
+        commentService.addComment(commentRequest, bookId, userDetails);
+        return "redirect:/books/" + bookId + "?success";
     }
+    @PostMapping("books/{bookId}/borrow")
+    public String borrowBook(@PathVariable Long bookId, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bookService.borrowBook(bookId, userDetails);
+        return "redirect:/books/" + bookId + "?success";
 
-
-    @DeleteMapping("/{bookId}/rate")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> removeRating(@PathVariable Long bookId, @AuthenticationPrincipal CustomUserDetails user) {
-        bookService.removeRating(bookId, user.getId());
-        return ResponseEntity.noContent().build();
     }
-    @GetMapping("/{bookId}/ratings/average")
-    public ResponseEntity<Double> getAverageRating(@PathVariable Long bookId) {
-        Double averageRating = bookService.getAverageRating(bookId);
-        return ResponseEntity.ok(averageRating);
+    @PostMapping("books/{bookId}/return")
+    public String returnBook(@PathVariable Long bookId, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bookService.returnBook(bookId, userDetails);
+        return "redirect:/books/" + bookId + "?success";
     }
 }

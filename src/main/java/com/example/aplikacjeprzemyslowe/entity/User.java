@@ -37,6 +37,9 @@ public class User {
     @Setter
     @Getter
     @JsonIgnore
+    @NotBlank(message = "Password is required.")
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$",
+            message = "Password must be at least 8 characters, include an uppercase letter, a number, and a special character.")
     private String password;
 
     @Getter

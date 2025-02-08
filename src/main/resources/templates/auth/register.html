@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Register</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<h2>Register</h2>
+
+<form th:action="@{/auth/register}" th:object="${registerRequest}" method="post" enctype="multipart/form-data">
+    <label>Full Name:</label>
+    <input type="text" name="fullName" th:field="*{fullName}" required>
+    <p th:if="${#fields.hasErrors('fullName')}" th:text="${#fields.errors('fullName')[0]}" style="color: red;"></p>
+
+    <label>Email:</label>
+    <input type="email" name="email" th:field="*{email}" required>
+    <p th:if="${#fields.hasErrors('email')}" th:text="${#fields.errors('email')[0]}" style="color: red;"></p>
+
+    <label>Username:</label>
+    <input type="text" name="username" th:field="*{username}" required>
+    <p th:if="${#fields.hasErrors('username')}" th:text="${#fields.errors('username')[0]}" style="color: red;"></p>
+
+    <label>Password:</label>
+    <input type="password" name="password" th:field="*{password}" required>
+    <p th:if="${#fields.hasErrors('password')}" th:text="${#fields.errors('password')[0]}" style="color: red;"></p>
+
+    <button type="submit">Register</button>
+</form>
+
+<p>Already have an account? <a href="/auth/login">Login here</a></p>
+</body>
+</html>

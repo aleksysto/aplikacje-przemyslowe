@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Library Home</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<section>
+    <h2>Search for Books</h2>
+    <form action="/search" method="get">
+        <input type="text" name="query" placeholder="Search..." required>
+        <select name="type">
+            <option value="title">By Title</option>
+            <option value="author">By Author</option>
+            <option value="genre">By Genre</option>
+        </select>
+        <button type="submit">Search</button>
+    </form>
+</section>
+
+<section>
+    <h2>Top Rated Books</h2>
+    <ul>
+        <li th:each="book : ${topRatedBooks}">
+            <a th:href="@{/books/{id}(id=${book.id})}" th:text="${book.title}"></a>
+            - Average Rating: <span th:text="${bookRatings[book.id]} ?: 'N/A'"></span>
+        </li>
+    </ul>
+</section>
+<section>
+    <h2>Top Rated Authors</h2>
+    <ul>
+        <li th:each="author : ${topRatedAuthors}">
+            <span th:text="${author.getKey().getName()}"></span>
+            <span th:text="${author.getValue()}"></span>
+        </li>
+    </ul>
+</section>
+</body>
+</html>

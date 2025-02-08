@@ -1,6 +1,7 @@
 package com.example.aplikacjeprzemyslowe.repository;
 
 import com.example.aplikacjeprzemyslowe.entity.Book;
+import com.example.aplikacjeprzemyslowe.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -39,5 +40,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     @Query("SELECT DISTINCT b.genre FROM Book b ORDER BY b.genre")
     List<String> findAllGenres();
+
+    List<Book> findByBorrowedBy(User user);
 
 }

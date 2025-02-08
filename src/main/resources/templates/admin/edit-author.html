@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Edit Author</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<h2>Edit Author</h2>
+
+<form method="post" th:action="@{/admin/authors/edit/{authorId}(authorId=${author.id})}" th:object="${authorRequest}">
+    <label>Author Name:</label>
+    <input type="text" name="name" th:field="*{name}" required>
+    <p th:if="${#fields.hasErrors('name')}" th:text="${#fields.errors('name')[0]}" style="color: red;"></p>
+
+    <button type="submit">Save Changes</button>
+</form>
+
+<p><a href="/admin">Back to Admin Panel</a></p>
+</body>
+</html>

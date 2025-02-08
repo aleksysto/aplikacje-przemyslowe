@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthorService {
@@ -19,6 +21,17 @@ public class AuthorService {
     }
     public List<Author> searchAuthorsByName(String name) {
         return authorRepository.searchByName(name);
+    }
+    public Map<Author, Double> getTopRatedAuthorsWithRatings() {
+        List<Author> topAuthors = authorRepository.findTopRatedAuthors();
+        return topAuthors.stream()
+                .collect(Collectors.toMap(
+                        author -> author,
+                        author -> findAverageRatingByAuthorId(author.getId())
+                ));
+    }
+    public Double findAverageRatingByAuthorId(Long authorId) {
+        return authorRepository.findAverageRatingByAuthorId(authorId).orElse(0.0);
     }
 
     public List<Author> getAllAuthors() {
@@ -47,5 +60,8 @@ public class AuthorService {
             throw new RuntimeException("Author not found!");
         }
         authorRepository.deleteById(id);
+    }
+    public List<Author> getTopRatedAuthors() {
+        return authorRepository.findTopRatedAuthors();
     }
 }

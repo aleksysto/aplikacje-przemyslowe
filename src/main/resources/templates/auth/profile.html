@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Profile</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div>
+
+    <div>
+        <h3>Full name:</h3>
+        <h3 th:text="${user.fullName}"></h3>
+    </div>
+    <div>
+        <h3>Username:</h3>
+        <h3 th:text="${user.username}"></h3>
+    </div>
+    <div>
+        <h3>Email:</h3>
+        <h3 th:text="${user.email}"></h3>
+    </div>
+</div>
+<h2>Edit Account</h2>
+
+<!-- Success message -->
+<p th:if="${param.success}" style="color: green;">Account updated successfully!</p>
+
+<!-- Form for editing account details -->
+<form th:action="@{/auth/update}" th:object="${registerRequest}" method="post" enctype="multipart/form-data">
+    <label>Username:</label>
+    <input type="text" name="username">
+    <p th:if="${#fields.hasErrors('username')}" th:text="${#fields.errors('username')[0]}" style="color: red;"></p>
+
+    <label>Full Name:</label>
+    <input type="text" name="fullName" th:field="*{fullName}" th:value="${user.fullName}">
+    <p th:if="${#fields.hasErrors('fullName')}" th:text="${#fields.errors('fullName')[0]}" style="color: red;"></p>
+
+    <label>Email:</label>
+    <input type="text" name="email" th:field="*{email}" th:value="${user.email}">
+    <p th:if="${#fields.hasErrors('email')}" th:text="${#fields.errors('email')[0]}" style="color: red;"></p>
+
+    <label>New Password:</label>
+    <input type="password" name="password" th:field="*{password}">
+    <p th:if="${#fields.hasErrors('password')}" th:text="${#fields.errors('password')[0]}" style="color: red;"></p>
+
+    <button type="submit">Save Changes</button>
+</form>
+
+<!-- Account deletion form -->
+<form method="post" th:action="@{/auth/delete}" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+    <button type="submit" style="color: red;">Delete Account</button>
+</form>
+
+<p><a href="/">Back to Home</a></p>
+<h2>Borrowed Books</h2>
+<ul>
+    <li th:each="book : ${borrowedBooks}">
+        <strong th:text="${book.title}"></strong> by <span th:text="${book.author.name}"></span>
+        (Borrowed until: <span th:text="${book.borrowedUntil}"></span>)
+        <form method="post" th:action="@{/books/{bookId}/return(bookId=${book.id})}">
+            <button type="submit">Return</button>
+        </form>
+    </li>
+</ul>
+</body>
+</html>

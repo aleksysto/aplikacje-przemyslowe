@@ -1,9 +1,8 @@
 package com.example.aplikacjeprzemyslowe.service;
 
-import com.example.aplikacjeprzemyslowe.entity.Book;
-import com.example.aplikacjeprzemyslowe.entity.BookRating;
-import com.example.aplikacjeprzemyslowe.entity.CustomUserDetails;
-import com.example.aplikacjeprzemyslowe.entity.User;
+import com.example.aplikacjeprzemyslowe.entity.*;
+import com.example.aplikacjeprzemyslowe.payload.BookRequest;
+import com.example.aplikacjeprzemyslowe.repository.AuthorRepository;
 import com.example.aplikacjeprzemyslowe.repository.BookRatingRepository;
 import com.example.aplikacjeprzemyslowe.repository.BookRepository;
 import com.example.aplikacjeprzemyslowe.repository.UserRepository;
@@ -21,14 +20,16 @@ public class BookService {
     private final BookRepository bookRepository;
     private final BookRatingRepository bookRatingRepository;
     private final UserRepository userRepository;
+    private final AuthorRepository authorRepository;
 
     @Autowired
     public BookService(BookRepository bookRepository,
                        BookRatingRepository bookRatingRepository,
-                       UserRepository userRepository) {
+                       UserRepository userRepository, AuthorRepository authorRepository) {
         this.bookRepository = bookRepository;
         this.bookRatingRepository = bookRatingRepository;
         this.userRepository = userRepository;
+        this.authorRepository = authorRepository;
     }
     public BookRating rateBook(Long bookId, Long userId, int ratingValue) {
         Book book = bookRepository.findById(bookId).orElseThrow(() -> new RuntimeException("Book not found"));
@@ -102,15 +103,28 @@ public class BookService {
     public List<String> getAllGenres() {
         return bookRepository.findAllGenres();
     }
-    public Book saveBook(Book book) {
-        return bookRepository.save(book);
+    public Book addBook(BookRequest updatedBook) {
+        Author author = authorRepository.findById(updatedBook.getAuthorId()).orElseThrow(() -> new RuntimeException("Author not found"));
+
+        Book newBook = new Book();
+        newBook.setTitle(updatedBook.getTitle());
+        newBook.setAuthor(author);
+        newBook.setGenre(updatedBook.getGenre());
+        newBook.setDescription(updatedBook.getDescription());
+        newBook.setPublishDate(updatedBook.getPublishDate());
+        newBook.setPublisher(updatedBook.getPublisher());
+        return bookRepository.save(newBook);
+    }
+    public void saveBook(Book book) {
+        bookRepository.save(book);
     }
 
-    public Book updateBook(Long bookId, Book updatedBook) {
+    public Book updateBook(Long bookId, BookRequest updatedBook) {
+        Author author = authorRepository.findById(updatedBook.getAuthorId()).orElseThrow(() -> new RuntimeException("Author not found"));
         return bookRepository.findById(bookId)
                 .map(existingBook -> {
                     existingBook.setTitle(updatedBook.getTitle());
-                    existingBook.setAuthor(updatedBook.getAuthor());
+                    existingBook.setAuthor(author);
                     existingBook.setGenre(updatedBook.getGenre());
                     existingBook.setDescription(updatedBook.getDescription());
                     existingBook.setPublishDate(updatedBook.getPublishDate());
@@ -156,5 +170,14 @@ public class BookService {
             book.setBorrowedBy(null);
             return bookRepository.save(book);
         });
+    }
+    public List<Book> getBorrowedBooks(User user) {
+        return bookRepository.findByBorrowedBy(user);
+    }
+    public List<Book> getAllBooks(){
+        return bookRepository.findAll();
+    }
+    public Optional<BookRating> findRatingByBookAndUser(Long bookId, Long userId) {
+        return bookRatingRepository.findByBookAndUser(bookId, userId);
     }
 }
