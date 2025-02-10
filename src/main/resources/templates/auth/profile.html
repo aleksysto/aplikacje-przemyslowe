@@ -2,65 +2,69 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Profile</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-<div>
+<body class="container mt-5">
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-lg p-4">
+            <h2 class="text-center mb-4">User Profile</h2>
+            <div class="mb-3">
+                <h4>Full Name:</h4>
+                <p class="form-control" th:text="${user.fullName}"></p>
+            </div>
+            <div class="mb-3">
+                <h4>Username:</h4>
+                <p class="form-control" th:text="${user.username}"></p>
+            </div>
+            <div class="mb-3">
+                <h4>Email:</h4>
+                <p class="form-control" th:text="${user.email}"></p>
+            </div>
 
-    <div>
-        <h3>Full name:</h3>
-        <h3 th:text="${user.fullName}"></h3>
-    </div>
-    <div>
-        <h3>Username:</h3>
-        <h3 th:text="${user.username}"></h3>
-    </div>
-    <div>
-        <h3>Email:</h3>
-        <h3 th:text="${user.email}"></h3>
+            <h3 class="mt-4">Edit Account</h3>
+            <p class="text-success" th:if="${param.success}">Account updated successfully!</p>
+
+            <form th:action="@{/auth/update}" th:object="${registerRequest}" method="post" class="border p-3 rounded">
+                <div class="mb-3">
+                    <label class="form-label">Username:</label>
+                    <input type="text" class="form-control" name="username">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Full Name:</label>
+                    <input type="text" class="form-control" name="fullName" th:field="*{fullName}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email:</label>
+                    <input type="email" class="form-control" name="email" th:field="*{email}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">New Password:</label>
+                    <input type="password" class="form-control" name="password" th:field="*{password}">
+                </div>
+                <button type="submit" class="btn btn-success w-100">Save Changes</button>
+            </form>
+
+            <form method="post" th:action="@{/auth/delete}" class="mt-3" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+                <button type="submit" class="btn btn-danger w-100">Delete Account</button>
+            </form>
+
+            <h3 class="mt-4">Borrowed Books</h3>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center" th:each="book : ${borrowedBooks}">
+                    <strong th:text="${book.title}"></strong>
+                    <span>by <span th:text="${book.author.name}"></span></span>
+                    <span>(Borrowed until: <span th:text="${book.borrowedUntil}"></span>)</span>
+                    <form method="post" th:action="@{/books/{bookId}/return(bookId=${book.id})}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-warning">Return</button>
+                    </form>
+                </li>
+            </ul>
+
+            <p class="mt-4 text-center"><a href="/" class="btn btn-outline-secondary">Back to Home</a></p>
+        </div>
     </div>
 </div>
-<h2>Edit Account</h2>
-
-<!-- Success message -->
-<p th:if="${param.success}" style="color: green;">Account updated successfully!</p>
-
-<!-- Form for editing account details -->
-<form th:action="@{/auth/update}" th:object="${registerRequest}" method="post" enctype="multipart/form-data">
-    <label>Username:</label>
-    <input type="text" name="username">
-    <p th:if="${#fields.hasErrors('username')}" th:text="${#fields.errors('username')[0]}" style="color: red;"></p>
-
-    <label>Full Name:</label>
-    <input type="text" name="fullName" th:field="*{fullName}" th:value="${user.fullName}">
-    <p th:if="${#fields.hasErrors('fullName')}" th:text="${#fields.errors('fullName')[0]}" style="color: red;"></p>
-
-    <label>Email:</label>
-    <input type="text" name="email" th:field="*{email}" th:value="${user.email}">
-    <p th:if="${#fields.hasErrors('email')}" th:text="${#fields.errors('email')[0]}" style="color: red;"></p>
-
-    <label>New Password:</label>
-    <input type="password" name="password" th:field="*{password}">
-    <p th:if="${#fields.hasErrors('password')}" th:text="${#fields.errors('password')[0]}" style="color: red;"></p>
-
-    <button type="submit">Save Changes</button>
-</form>
-
-<!-- Account deletion form -->
-<form method="post" th:action="@{/auth/delete}" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
-    <button type="submit" style="color: red;">Delete Account</button>
-</form>
-
-<p><a href="/">Back to Home</a></p>
-<h2>Borrowed Books</h2>
-<ul>
-    <li th:each="book : ${borrowedBooks}">
-        <strong th:text="${book.title}"></strong> by <span th:text="${book.author.name}"></span>
-        (Borrowed until: <span th:text="${book.borrowedUntil}"></span>)
-        <form method="post" th:action="@{/books/{bookId}/return(bookId=${book.id})}">
-            <button type="submit">Return</button>
-        </form>
-    </li>
-</ul>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

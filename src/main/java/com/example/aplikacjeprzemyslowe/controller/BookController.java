@@ -170,4 +170,45 @@ public class BookController {
         bookService.returnBook(bookId, userDetails);
         return "redirect:/books/" + bookId + "?success";
     }
+    @GetMapping("books/{bookId}/edit/{commentId}")
+    public String showEditCommentPage(@PathVariable Long commentId, @PathVariable Long bookId, Model model) {
+        Book book = bookService.getBookById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+        Comment comment = commentService.getCommentById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        model.addAttribute("comment", comment);
+        model.addAttribute("commentRequest", new CommentRequest());
+        model.addAttribute("book", book);
+        return "comments/edit-comment";
+    }
+    @PostMapping("books/{bookId}/edit/{commentId}")
+    public String editComment(@PathVariable Long commentId,
+                              @PathVariable Long bookId,
+                              @Valid @ModelAttribute("commentRequest") CommentRequest commentRequest,
+    BindingResult result,
+    Model model,
+    @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Book book = bookService.getBookById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+        Comment comment = commentService.getCommentById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+        if(comment.getAuthor().getId() != userDetails.getId()) {
+            result.rejectValue("text", "error.commentUpdateRequest", "Cannot edit someone else's comment");
+            model.addAttribute("commentRequest", commentRequest);
+            model.addAttribute("book", book);
+            model.addAttribute("comment", comment);
+            return "comments/edit-comment";
+        }
+
+        if (result.hasErrors()) {
+            System.out.println(result.getAllErrors());
+            model.addAttribute("commentRequest", commentRequest);
+
+            model.addAttribute("comment", comment);
+            return "comments/edit-comment";
+        }
+        commentService.updateComment(commentId, commentRequest.getText());
+        return "redirect:/books/" + bookId + "?success";
+    }
 }

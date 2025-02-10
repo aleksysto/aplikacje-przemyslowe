@@ -6,20 +6,19 @@
 </head>
 <body class="container mt-5">
 <div th:replace="~{fragments/header :: header}"></div>
-
 <div class="row justify-content-center">
     <div class="col-md-6">
         <div class="card shadow-lg p-4">
             <h2 class="text-center mb-4">Edit Comment</h2>
-            <form method="post" th:action="@{/admin/comments/edit/{commentId}(commentId=${comment.id})}" th:object="${commentRequest}">
+            <form method="post" th:action="@{/books/{bookId}/edit/{commentId}(commentId=${comment.id}, bookId=${book.id})}" th:object="${commentRequest}">
                 <div class="mb-3">
-                    <label class="form-label">Comment:</label>
-                    <textarea class="form-control" name="text" th:field="*{text}" required></textarea>
+                    <label for="comment" class="form-label">Comment:</label>
+                    <textarea id="comment" name="text" class="form-control" th:field="*{text}" required></textarea>
                     <div class="text-danger" th:if="${#fields.hasErrors('text')}" th:text="${#fields.errors('text')[0]}"></div>
                 </div>
                 <button type="submit" class="btn btn-success w-100">Save Changes</button>
             </form>
-            <p class="text-center mt-3"><a href="/admin" class="btn btn-outline-secondary">Back to Admin Panel</a></p>
+            <p class="text-center mt-3"><a th:href="@{/books/{bookId}(bookId=${book.id})}" class="btn btn-outline-secondary">Back to Book</a></p>
         </div>
     </div>
 </div>

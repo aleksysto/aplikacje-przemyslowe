@@ -2,94 +2,97 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-<h2>Admin Dashboard</h2>
+<body class="container mt-5">
+<div th:replace="~{fragments/header :: header}"></div>
+<h2 class="text-center mb-4">Admin Dashboard</h2>
 
-<!-- Navigation Buttons -->
-<a href="/admin/books/add"><button>Add Book</button></a>
-<a href="/admin/authors/add"><button>Add Author</button></a>
+<div class="d-flex justify-content-between mb-4">
+    <a href="/admin/books/add" class="btn btn-primary">Add Book</a>
+    <a href="/admin/authors/add" class="btn btn-secondary">Add Author</a>
+</div>
 
-<!-- Dropdown to select which entity list to display -->
-<label for="entitySelect">Show:</label>
-<select id="entitySelect" onchange="showEntityList()">
-    <option value="books">Books</option>
-    <option value="authors">Authors</option>
-    <option value="users">Users</option>
-    <option value="comments">Comments</option>
-</select>
+<div class="mb-3">
+    <label for="entitySelect" class="form-label">Show:</label>
+    <select id="entitySelect" class="form-select" onchange="showEntityList()">
+        <option value="books">Books</option>
+        <option value="authors">Authors</option>
+        <option value="users">Users</option>
+        <option value="comments">Comments</option>
+    </select>
+</div>
 
-<!-- Books Management -->
-<div id="booksList">
+<div id="booksList" class="border p-3 rounded shadow-sm">
     <h3>Books</h3>
-    <ul>
-        <li th:each="book : ${books}">
+    <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center" th:each="book : ${books}">
             <span th:text="${book.title} + ' by ' + ${book.author.name}"></span>
-            <a th:href="@{/admin/books/edit/{bookId}(bookId=${book.id})}"><button>Edit</button></a>
-            <form method="post" th:action="@{/admin/books/delete/{bookId}(bookId=${book.id})}">
-                <button type="submit">Delete</button>
-            </form>
+            <div>
+                <a th:href="@{/admin/books/edit/{bookId}(bookId=${book.id})}" class="btn btn-sm btn-warning">Edit</a>
+                <form method="post" th:action="@{/admin/books/delete/{bookId}(bookId=${book.id})}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </div>
         </li>
     </ul>
 </div>
 
-<!-- Authors Management -->
-<div id="authorsList" style="display:none;">
+<div id="authorsList" class="border p-3 rounded shadow-sm d-none">
     <h3>Authors</h3>
-    <ul>
-        <li th:each="author : ${authors}">
+    <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center" th:each="author : ${authors}">
             <span th:text="${author.name}"></span>
-            <a th:href="@{/admin/authors/edit/{authorId}(authorId=${author.id})}"><button>Edit</button></a>
-            <form method="post" th:action="@{/admin/authors/delete/{authorId}(authorId=${author.id})}">
-                <button type="submit">Delete</button>
-            </form>
+            <div>
+                <a th:href="@{/admin/authors/edit/{authorId}(authorId=${author.id})}" class="btn btn-sm btn-warning">Edit</a>
+                <form method="post" th:action="@{/admin/authors/delete/{authorId}(authorId=${author.id})}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </div>
         </li>
     </ul>
 </div>
 
-<!-- Users Management -->
-<div id="usersList" style="display:none;">
+<div id="usersList" class="border p-3 rounded shadow-sm d-none">
     <h3>Users</h3>
-    <ul>
-        <li th:each="user : ${users}">
+    <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center" th:each="user : ${users}">
             <span th:text="${user.username}"></span>
-            <form method="post" th:action="@{/admin/users/delete/{userId}(userId=${user.id})}">
-                <button type="submit">Delete</button>
+            <form method="post" th:action="@{/admin/users/delete/{userId}(userId=${user.id})}" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
             </form>
         </li>
     </ul>
 </div>
 
-<!-- Comments Management -->
-<div id="commentsList" style="display:none;">
+<div id="commentsList" class="border p-3 rounded shadow-sm d-none">
     <h3>Comments</h3>
-    <ul>
-        <li th:each="comment : ${comments}">
+    <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center" th:each="comment : ${comments}">
             <span th:text="${comment.text} + ' - ' + ${comment.author.username}"></span>
-            <form method="post" th:action="@{/admin/comments/edit/{commentId}(commentId=${comment.id})}">
-                <input type="text" name="text" required>
-                <button type="submit">Edit</button>
-            </form>
-            <form method="post" th:action="@{/admin/comments/delete/{commentId}(commentId=${comment.id})}">
-                <button type="submit">Delete</button>
-            </form>
+            <div>
+                <a th:href="@{/admin/comments/edit/{commentId}(commentId=${comment.id})}" class="btn btn-sm btn-warning">Edit</a>
+                <form method="post" th:action="@{/admin/comments/delete/{commentId}(commentId=${comment.id})}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </div>
         </li>
     </ul>
 </div>
 
-<p><a href="/">Back to Home</a></p>
+<p class="mt-4"><a href="/" class="btn btn-outline-secondary">Back to Home</a></p>
 
 <script>
     function showEntityList() {
-        document.getElementById("booksList").style.display = "none";
-        document.getElementById("authorsList").style.display = "none";
-        document.getElementById("usersList").style.display = "none";
-        document.getElementById("commentsList").style.display = "none";
+        document.getElementById("booksList").classList.add("d-none");
+        document.getElementById("authorsList").classList.add("d-none");
+        document.getElementById("usersList").classList.add("d-none");
+        document.getElementById("commentsList").classList.add("d-none");
 
         let selected = document.getElementById("entitySelect").value;
-        document.getElementById(selected + "List").style.display = "block";
+        document.getElementById(selected + "List").classList.remove("d-none");
     }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

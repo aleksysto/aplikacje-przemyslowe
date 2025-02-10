@@ -20,7 +20,7 @@ public class Comment {
     @Getter
     @Setter
     @NotBlank(message = "Comment cannot be empty.")
-    @Size(max = 1000, message = "Comment cannot exceed 1000 characters.")
+    @Size(min = 3, max = 2000, message = "Comment must be between 3 and 2000 chars long")
     private String text;
 
     @ManyToOne

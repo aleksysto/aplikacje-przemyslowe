@@ -2,64 +2,69 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Book Details</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-<h2 th:text="${book.title}"></h2>
-<p><strong>Author:</strong> <span th:text="${book.author.name}"></span></p>
-<p><strong>Genre:</strong> <span th:text="${book.genre}"></span></p>
-<p><strong>Description:</strong> <span th:text="${book.description}"></span></p>
-<p><strong>Published on:</strong> <span th:text="${book.publishDate}"></span></p>
-<p><strong>Publisher:</strong> <span th:text="${book.publisher}"></span></p>
-<p th:if="${book.borrowed}"><strong>Borrowed until:</strong> <span th:text="${book.borrowedUntil}"></span></p>
-<th:block th:if="${#authorization.expression('isAuthenticated()')}">
-    <th:block th:if="${!book.borrowed}">
-        <form method="post" th:action="@{/books/{bookId}/borrow(bookId=${book.id})}">
-            <button type="submit">Borrow this book</button>
-        </form>
-    </th:block>
-    <th:block th:if="${book.borrowed}">
-        <p><strong>This book is currently borrowed.</strong></p>
-    </th:block>
-    <h3>Rate the Book</h3>
-    <th:block th:if="${yourRating != null}">
-        <p><strong>Your Rating:</strong> <span th:text="${yourRating}"></span></p>
-    </th:block>
-    <th:block th:if="${avgRating != null}">
-        <p><strong>Average Rating:</strong> <span th:text="${avgRating}"></span></p>
-    </th:block>
-    <form method="post" th:action="@{/books/{bookId}/rate(bookId=${book.id})}" th:object="${ratingRequest}">
-        <label for="rating">Rating (1-5):</label>
-        <select id="rating" name="rating" th:field="*{rating}">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-        </select>
-        <p th:if="${#fields.hasErrors('rating')}" th:text="${#fields.errors('rating')[0]}" style="color: red;"></p>
-        <button type="submit">Submit Rating</button>
-    </form>
+<body class="container mt-5">
+<div class="row justify-content-center">
+    <div th:replace="~{fragments/header :: header}"></div>
+    <div class="col-md-8">
+        <div class="card shadow-lg p-4">
+            <h2 class="text-center mb-3" th:text="${book.title}"></h2>
+            <p><strong>Author:</strong> <span th:text="${book.author.name}"></span></p>
+            <p><strong>Genre:</strong> <span th:text="${book.genre}"></span></p>
+            <p><strong>Description:</strong> <span th:text="${book.description}"></span></p>
+            <p><strong>Published on:</strong> <span th:text="${book.publishDate}"></span></p>
+            <p><strong>Publisher:</strong> <span th:text="${book.publisher}"></span></p>
 
-    <h3>Leave a Comment</h3>
-    <form method="post" th:action="@{/books/{bookId}/comment(bookId=${book.id})}" th:object="${commentRequest}">
-        <label for="comment">Comment:</label>
-        <textarea id="comment" name="text" th:field="*{text}" required></textarea>
-        <p th:if="${#fields.hasErrors('text')}" th:text="${#fields.errors('text')[0]}" style="color: red;"></p>
-        <button type="submit">Submit Comment</button>
-    </form>
-</th:block>
-<th:block th:unless="${#authorization.expression('isAuthenticated()')}">
-    <p><a href="/auth/login">Log in</a> to rate or comment on this book.</p>
-</th:block>
+            <th:block th:if="${book.borrowed}">
+                <p class="text-danger"><strong>Borrowed until:</strong> <span th:text="${book.borrowedUntil}"></span></p>
+            </th:block>
 
-<h3>Comments</h3>
-<ul>
-    <li th:each="comment : ${comments}">
-        <p><strong th:text="${comment.author.username}"></strong>: <span th:text="${comment.text}"></span></p>
-    </li>
-</ul>
+            <th:block th:if="${#authorization.expression('isAuthenticated()')}">
+                <th:block th:if="${!book.borrowed}">
+                    <form method="post" th:action="@{/books/{bookId}/borrow(bookId=${book.id})}">
+                        <button type="submit" class="btn btn-primary w-100">Borrow this book</button>
+                    </form>
+                </th:block>
 
-<p><a href="/">Back to Home</a></p>
+                <h3 class="mt-4">Rate the Book</h3>
+                <p th:if="${yourRating != null}"><strong>Your Rating:</strong> <span th:text="${yourRating}"></span></p>
+                <p><strong>Average Rating:</strong> <span th:text="${@utilityClass.formatTwoDecimals(avgRating)}"></span></p>
+
+                <form method="post" th:action="@{/books/{bookId}/rate(bookId=${book.id})}" th:object="${ratingRequest}" class="border p-3 rounded">
+                    <label for="rating" class="form-label">Rating (1-5):</label>
+                    <select id="rating" name="rating" class="form-select" th:field="*{rating}">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                    <button type="submit" class="btn btn-success mt-2 w-100">Submit Rating</button>
+                </form>
+
+                <h3 class="mt-4">Leave a Comment</h3>
+                <form method="post" th:action="@{/books/{bookId}/comment(bookId=${book.id})}" th:object="${commentRequest}" class="border p-3 rounded">
+                    <label for="comment" class="form-label">Comment:</label>
+                    <textarea id="comment" name="text" class="form-control" th:field="*{text}" required></textarea>
+                    <button type="submit" class="btn btn-primary mt-2 w-100">Submit Comment</button>
+                </form>
+            </th:block>
+
+            <h3 class="mt-4">Comments</h3>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center" th:each="comment : ${comments}">
+                    <span><strong th:text="${comment.author.username}"></strong>: <span th:text="${comment.text}"></span></span>
+                    <th:block th:if="${#authentication.name == comment.author.username}">
+                        <a th:href="@{/books/{bookId}/edit/{commentId}(commentId=${comment.id}, bookId=${book.id})}" class="btn btn-sm btn-warning">Edit</a>
+                    </th:block>
+                </li>
+            </ul>
+
+            <p class="mt-4 text-center"><a href="/" class="btn btn-outline-secondary">Back to Home</a></p>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
